@@ -12,4 +12,5 @@
     <string name="previous_button">Previous</string>
     <string name="correct_toast">정답!</string>
     <string name="incorrect_toast">틀렸음!</string>
+    <string name="score_toast">점수 백분율(%):</string>
 </resources>

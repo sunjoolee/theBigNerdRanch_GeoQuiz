@@ -22,12 +22,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var questionTextView: TextView
 
     private val questionBank = listOf(
-        Question(R.string.question_australia, true, false),
-        Question(R.string.question_oceans, true, false),
-        Question(R.string.question_mideast, false, false),
-        Question(R.string.question_africa, false, false),
-        Question(R.string.question_americas, true, false),
-        Question(R.string.question_asia, true, false))
+        Question(R.string.question_australia, true),
+        Question(R.string.question_oceans, true),
+        Question(R.string.question_mideast, false),
+        Question(R.string.question_africa, false),
+        Question(R.string.question_americas, true),
+        Question(R.string.question_asia, true))
     private var currentIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,43 +89,82 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "onDestroy() called")
     }
 
-
     private fun updateQuestion() {
         val questionTextResId = questionBank[currentIndex].textResId
         questionTextView.setText(questionTextResId)
-        disableBtnIfSolved()
+        disableBtnIfAnswered()
     }
 
     private fun checkAnswer(userAnswer: Boolean) {
-        val correctAnswer = questionBank[currentIndex].answer
-
+        val currentQuestion = questionBank[currentIndex]
+        val correctAnswer = currentQuestion.answer
         var messageResId : Int
 
         if (userAnswer == correctAnswer) {
             messageResId = R.string.correct_toast
-            questionBank[currentIndex].solved = true
+            currentQuestion.answered = correct
         }else{
             messageResId = R.string.incorrect_toast
+            currentQuestion.answered = wrong
         }
-
-        disableBtnIfSolved()
 
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
             .apply{
-                this.setGravity(Gravity.TOP,Gravity.CENTER,0)
+                this.setGravity(Gravity.TOP,Gravity.CENTER,300)
             }
             .show()
+
+        disableBtnIfAnswered()
+        showScoreIfAnsweredAll()
     }
 
-    private fun disableBtnIfSolved(){
-        if(questionBank[currentIndex].solved == true) {
-            trueButton.setEnabled(false)
-            falseButton.setEnabled(false)
+    private fun disableBtnIfAnswered(){
+        if(questionBank[currentIndex].answered == notAnswered) {
+            ableAnswerBtn()
         }else{
-            trueButton.setEnabled(true)
-            falseButton.setEnabled(true)
+            disableAnswerBtn()
         }
     }
+
+    private fun ableAnswerBtn(){
+        trueButton.setEnabled(true)
+        falseButton.setEnabled(true)
+    }
+
+    private fun disableAnswerBtn(){
+        trueButton.setEnabled(false)
+        falseButton.setEnabled(false)
+    }
+
+    private fun showScoreIfAnsweredAll(){
+        var answeredAll = true
+        for(q in questionBank){
+            if(q.answered == notAnswered){
+                answeredAll = false
+                break
+            }
+        }
+
+        if(answeredAll){
+            var score = 0
+            for(q in questionBank){
+                if(q.answered == correct){
+                    score += 1
+                }
+                q.answered = notAnswered
+            }
+            score = score * 100 / questionBank.size
+
+            Toast.makeText(this, "점수 백분율(%):$score", Toast.LENGTH_SHORT)
+                .apply{
+                    this.setGravity(Gravity.TOP,Gravity.CENTER,500)
+                }
+                .show()
+
+            ableAnswerBtn()
+        }
+    }
+
 
 }
 
