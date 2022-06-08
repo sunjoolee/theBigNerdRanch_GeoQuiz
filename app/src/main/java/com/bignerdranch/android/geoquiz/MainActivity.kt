@@ -9,6 +9,7 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isInvisible
 
 private const val TAG = "MainActivity"
 
@@ -21,12 +22,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var questionTextView: TextView
 
     private val questionBank = listOf(
-        Question(R.string.question_australia, true),
-        Question(R.string.question_oceans, true),
-        Question(R.string.question_mideast, false),
-        Question(R.string.question_africa, false),
-        Question(R.string.question_americas, true),
-        Question(R.string.question_asia, true))
+        Question(R.string.question_australia, true, false),
+        Question(R.string.question_oceans, true, false),
+        Question(R.string.question_mideast, false, false),
+        Question(R.string.question_africa, false, false),
+        Question(R.string.question_americas, true, false),
+        Question(R.string.question_asia, true, false))
     private var currentIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,23 +93,39 @@ class MainActivity : AppCompatActivity() {
     private fun updateQuestion() {
         val questionTextResId = questionBank[currentIndex].textResId
         questionTextView.setText(questionTextResId)
+        disableBtnIfSolved()
     }
 
     private fun checkAnswer(userAnswer: Boolean) {
         val correctAnswer = questionBank[currentIndex].answer
 
-        val messageResId = if (userAnswer == correctAnswer) {
-            R.string.correct_toast
-        } else {
-            R.string.incorrect_toast
+        var messageResId : Int
+
+        if (userAnswer == correctAnswer) {
+            messageResId = R.string.correct_toast
+            questionBank[currentIndex].solved = true
+        }else{
+            messageResId = R.string.incorrect_toast
         }
+
+        disableBtnIfSolved()
 
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
             .apply{
-            this.setGravity(Gravity.TOP,Gravity.CENTER,0)
-        }.show()
+                this.setGravity(Gravity.TOP,Gravity.CENTER,0)
+            }
+            .show()
     }
 
+    private fun disableBtnIfSolved(){
+        if(questionBank[currentIndex].solved == true) {
+            trueButton.setEnabled(false)
+            falseButton.setEnabled(false)
+        }else{
+            trueButton.setEnabled(true)
+            falseButton.setEnabled(true)
+        }
+    }
 
 }
 
