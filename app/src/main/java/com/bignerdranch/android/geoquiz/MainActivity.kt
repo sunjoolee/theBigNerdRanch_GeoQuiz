@@ -23,7 +23,9 @@ class MainActivity : AppCompatActivity() {
                 this,
                 R.string.correct_toast,
                 Toast.LENGTH_SHORT
-            ).show()
+            ).apply{
+                this.setGravity(Gravity.TOP,Gravity.CENTER,0)
+            }.show()
         }
 
         falseButton.setOnClickListener {
@@ -31,7 +33,9 @@ class MainActivity : AppCompatActivity() {
                 this,
                 R.string.incorrect_toast,
                 Toast.LENGTH_SHORT
-            ).show()
+            ).apply{
+                this.setGravity(Gravity.TOP,Gravity.CENTER,0)
+            }.show()
         }
     }
 }
