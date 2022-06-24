@@ -1,5 +1,7 @@
 package com.bignerdranch.android.geoquiz
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -10,8 +12,18 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isInvisible
+import androidx.lifecycle.ViewModelProvider
 
+//Log.d TAG
 private const val TAG = "MainActivity"
+
+//SIS에 저장할 Bundle 객체에 저장될 데이터의 키
+private const val KEY_INDEX = "index"
+
+//요청 코드
+//자식 액티비티로부터 데이터를 돌려받을 때 어떤 자식 액티비티가 결과를 돌려주는 것인지 알고자 할때 사용
+private const val REQUEST_CODE_CHEAT = 0
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,151 +32,103 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nextButton: ImageButton
     private lateinit var previousButton: ImageButton
     private lateinit var questionTextView: TextView
+    private lateinit var cheatButton:Button
 
-    private val questionBank = listOf(
-        Question(R.string.question_australia, true),
-        Question(R.string.question_oceans, true),
-        Question(R.string.question_mideast, false),
-        Question(R.string.question_africa, false),
-        Question(R.string.question_americas, true),
-        Question(R.string.question_asia, true))
-    private var currentIndex = 0
+    //ViewModel 인스턴스 사용하기
+    private val quizViewModel : QuizViewModel by lazy {
+        ViewModelProvider(this).get(QuizViewModel::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        Log.d(TAG, "onCreate(Bundle?) called")
-        setContentView(R.layout.activity_main)
+            super.onCreate(savedInstanceState)
+            Log.d(TAG, "onCreate(Bundle?) called")
+            setContentView(R.layout.activity_main)
 
-        trueButton = findViewById(R.id.true_button)
-        falseButton = findViewById(R.id.false_button)
-        nextButton = findViewById(R.id.next_button)
-        previousButton = findViewById(R.id.previous_button)
-        questionTextView = findViewById(R.id.question_text_view)
+            val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0)?:0
+            quizViewModel.currentIndex = currentIndex
 
-        trueButton.setOnClickListener {
-            checkAnswer(true)
-        }
+            trueButton = findViewById(R.id.true_button)
+            falseButton = findViewById(R.id.false_button)
+            nextButton = findViewById(R.id.next_button)
+            previousButton = findViewById(R.id.previous_button)
+            questionTextView = findViewById(R.id.question_text_view)
+            cheatButton = findViewById(R.id.cheat_button)
 
-        falseButton.setOnClickListener {
-            checkAnswer(false)
-        }
+            trueButton.setOnClickListener {
+                checkAnswer(true)
+            }
 
-        nextButton.setOnClickListener {
-            currentIndex = (currentIndex + 1) % questionBank.size
+            falseButton.setOnClickListener {
+                checkAnswer(false)
+            }
+
+            nextButton.setOnClickListener {
+                quizViewModel.moveToNext()
+                updateQuestion()
+            }
+
+            questionTextView.setOnClickListener {
+                quizViewModel.moveToNext()
+                updateQuestion()
+            }
+
+            previousButton.setOnClickListener {
+                quizViewModel.moveToPrevious()
+                updateQuestion()
+            }
+
+            cheatButton.setOnClickListener{
+                //CheatActivity를 시작시킨다
+                val answerIsTrue = quizViewModel.currentQuestionAnswer
+                val intent = CheatActivity.newIntent(this@MainActivity, answerIsTrue)
+                //자식 액티비티로부터 데이터를 돌려받기 위해 사용
+                startActivityForResult(intent, REQUEST_CODE_CHEAT)
+            }
+
             updateQuestion()
         }
 
-        questionTextView.setOnClickListener {
-            currentIndex = (currentIndex + 1) % questionBank.size
-            updateQuestion()
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        super.onSaveInstanceState(savedInstanceState)
+        Log.d(TAG, "onSaveInstanceState")
+        savedInstanceState.putInt(KEY_INDEX, quizViewModel.currentIndex)
+
+    }
+    
+    //CheatActivity가 돌려주는 결과 값을 가져오기 위해 오버라이드
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        
+        if(resultCode != Activity.RESULT_OK){
+            return
         }
 
-        previousButton.setOnClickListener {
-            currentIndex =
-                if(currentIndex - 1 < 0) questionBank.size - 1
-                else currentIndex - 1
-            updateQuestion()
+        if(requestCode == REQUEST_CODE_CHEAT){
+            quizViewModel.isCheater =
+                data?.getBooleanExtra(EXTRA_ANSWER_SHOWN, false)?: false
+        }
+    }
+
+        private fun updateQuestion() {
+            val questionTextResId = quizViewModel.currentQuestionText
+            questionTextView.setText(questionTextResId)
         }
 
-        updateQuestion()
-    }
-    override fun onStart(){
-        super.onStart()
-        Log.d(TAG, "onStart() called")
-    }
-    override fun onResume(){
-        super.onResume()
-        Log.d(TAG, "onResume() called")
-    }
-    override fun onPause(){
-        super.onPause()
-        Log.d(TAG, "onPause() called")
-    }
-    override fun onStop(){
-        super.onStop()
-        Log.d(TAG, "onStop() called")
-    }
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d(TAG, "onDestroy() called")
-    }
+        private fun checkAnswer(userAnswer: Boolean) {
+            val correctAnswer = quizViewModel.currentQuestionAnswer
 
-    private fun updateQuestion() {
-        val questionTextResId = questionBank[currentIndex].textResId
-        questionTextView.setText(questionTextResId)
-        disableBtnIfAnswered()
-    }
-
-    private fun checkAnswer(userAnswer: Boolean) {
-        val currentQuestion = questionBank[currentIndex]
-        val correctAnswer = currentQuestion.answer
-        var messageResId : Int
-
-        if (userAnswer == correctAnswer) {
-            messageResId = R.string.correct_toast
-            currentQuestion.answered = correct
-        }else{
-            messageResId = R.string.incorrect_toast
-            currentQuestion.answered = wrong
-        }
-
-        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
-            .apply{
-                this.setGravity(Gravity.TOP,Gravity.CENTER,300)
+            val messageResId = when{
+                quizViewModel.isCheater -> R.string.judgement_toast
+                userAnswer == correctAnswer -> R.string.correct_toast
+                else -> R.string.incorrect_toast
             }
-            .show()
 
-        disableBtnIfAnswered()
-        showScoreIfAnsweredAll()
-    }
-
-    private fun disableBtnIfAnswered(){
-        if(questionBank[currentIndex].answered == notAnswered) {
-            ableAnswerBtn()
-        }else{
-            disableAnswerBtn()
-        }
-    }
-
-    private fun ableAnswerBtn(){
-        trueButton.setEnabled(true)
-        falseButton.setEnabled(true)
-    }
-
-    private fun disableAnswerBtn(){
-        trueButton.setEnabled(false)
-        falseButton.setEnabled(false)
-    }
-
-    private fun showScoreIfAnsweredAll(){
-        var answeredAll = true
-        for(q in questionBank){
-            if(q.answered == notAnswered){
-                answeredAll = false
-                break
-            }
-        }
-
-        if(answeredAll){
-            var score = 0
-            for(q in questionBank){
-                if(q.answered == correct){
-                    score += 1
-                }
-                q.answered = notAnswered
-            }
-            score = score * 100 / questionBank.size
-
-            Toast.makeText(this, "점수 백분율(%):$score", Toast.LENGTH_SHORT)
+            Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
                 .apply{
-                    this.setGravity(Gravity.TOP,Gravity.CENTER,500)
+                    this.setGravity(Gravity.TOP,Gravity.CENTER,300)
                 }
                 .show()
-
-            ableAnswerBtn()
         }
     }
 
-
-}
 

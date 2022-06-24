@@ -12,5 +12,8 @@
     <string name="previous_button">Previous</string>
     <string name="correct_toast">정답!</string>
     <string name="incorrect_toast">틀렸음!</string>
-    <string name="score_toast">점수 백분율(%):</string>
+    <string name="warning_text">정말로 답을 보시겠습니까?</string>
+    <string name="show_answer_button">정답 보기</string>
+    <string name="cheat_button">컨닝하기</string>
+    <string name="judgement_toast">컨닝을 하면 안됩니다</string>
 </resources>

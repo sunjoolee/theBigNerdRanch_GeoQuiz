@@ -42,4 +42,6 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    //ViewModel클래스는 안드로이드 Jetpack의 lifecycle-extensions 라이브러리에 포함되어 제공됨
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
 }
