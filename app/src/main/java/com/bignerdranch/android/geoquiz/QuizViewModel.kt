@@ -8,9 +8,6 @@ private const val TAG = "QuizViewModel"
 class QuizViewModel : ViewModel(){
     var currentIndex = 0
 
-    //사용자의 컨닝 상태 구성 변경 시 보존하기 위해 QuizViewModel에 저장
-    var isCheater = false
-
     private val questionBank = listOf(
         Question(R.string.question_australia, true),
         Question(R.string.question_oceans, true),
@@ -24,6 +21,11 @@ class QuizViewModel : ViewModel(){
 
     val currentQuestionText : Int
         get() = questionBank[currentIndex].textResId
+
+    fun getCurrentQuestionCheated() : Boolean  = questionBank[currentIndex].cheated
+    fun setCurrentQuestionCheated(value : Boolean) {
+        questionBank[currentIndex].cheated = value
+    }
 
     fun moveToNext(){
         currentIndex = (currentIndex + 1) % questionBank.size
