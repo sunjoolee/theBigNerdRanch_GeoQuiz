@@ -35,7 +35,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var previousButton: ImageButton
     private lateinit var questionTextView: TextView
     private lateinit var cheatButton:Button
-    private lateinit var versionTextView: TextView
+    private lateinit var cheatCountTextView: TextView
+//    private lateinit var versionTextView: TextView
 
     //ViewModel 인스턴스 사용하기
     private val quizViewModel : QuizViewModel by lazy {
@@ -43,62 +44,70 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-            super.onCreate(savedInstanceState)
-            Log.d(TAG, "onCreate(Bundle?) called")
-            setContentView(R.layout.activity_main)
+        super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate(Bundle?) called")
+        setContentView(R.layout.activity_main)
 
-            val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0)?:0
-            quizViewModel.currentIndex = currentIndex
+        val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0)?:0
+        quizViewModel.currentIndex = currentIndex
 
-            trueButton = findViewById(R.id.true_button)
-            falseButton = findViewById(R.id.false_button)
-            nextButton = findViewById(R.id.next_button)
-            previousButton = findViewById(R.id.previous_button)
-            questionTextView = findViewById(R.id.question_text_view)
-            cheatButton = findViewById(R.id.cheat_button)
+        trueButton = findViewById(R.id.true_button)
+        falseButton = findViewById(R.id.false_button)
+        nextButton = findViewById(R.id.next_button)
+        previousButton = findViewById(R.id.previous_button)
+        questionTextView = findViewById(R.id.question_text_view)
+        cheatButton = findViewById(R.id.cheat_button)
+        cheatCountTextView = findViewById(R.id.cheat_count_text_view)
+//      versionTextView = findViewById(R.id.version_text_view)
 
-            versionTextView = findViewById(R.id.version_text_view)
-            versionTextView.setText("API 레벨 ${Build.VERSION.SDK_INT}")
+        cheatCountTextView.text = "남은 커닝 횟수: ${quizViewModel.cheatCount}"
+//      versionTextView.setText("API 레벨 ${Build.VERSION.SDK_INT}")
 
-            trueButton.setOnClickListener {
-                checkAnswer(true)
-            }
+        trueButton.setOnClickListener {
+            checkAnswer(true)
+        }
 
-            falseButton.setOnClickListener {
-                checkAnswer(false)
-            }
+        falseButton.setOnClickListener {
+            checkAnswer(false)
+        }
 
-            nextButton.setOnClickListener {
-                quizViewModel.moveToNext()
-                updateQuestion()
-            }
-
-            questionTextView.setOnClickListener {
-                quizViewModel.moveToNext()
-                updateQuestion()
-            }
-
-            previousButton.setOnClickListener {
-                quizViewModel.moveToPrevious()
-                updateQuestion()
-            }
-
-            cheatButton.setOnClickListener{ view ->
-                //CheatActivity를 시작시킨다
-                val answerIsTrue = quizViewModel.currentQuestionAnswer
-                val intent = CheatActivity.newIntent(this@MainActivity, answerIsTrue)
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    val options =
-                        ActivityOptions.makeClipRevealAnimation(view, 0, 0, view.width, view.height)
-                    //자식 액티비티로부터 데이터를 돌려받기 위해 사용
-                    startActivityForResult(intent, REQUEST_CODE_CHEAT, options.toBundle())
-                }else{
-                    startActivityForResult(intent, REQUEST_CODE_CHEAT)
-                }
-            }
-
+        nextButton.setOnClickListener {
+            quizViewModel.moveToNext()
             updateQuestion()
         }
+
+        questionTextView.setOnClickListener {
+            quizViewModel.moveToNext()
+            updateQuestion()
+        }
+
+        previousButton.setOnClickListener {
+            quizViewModel.moveToPrevious()
+            updateQuestion()
+        }
+
+        cheatButton.setOnClickListener{ view ->
+            if(quizViewModel.cheatCount == 0){
+                Toast.makeText(this, "남은 커닝 횟수가 없습니다", Toast.LENGTH_SHORT)
+                    .show()
+                return@setOnClickListener
+            }
+
+            //CheatActivity를 시작시킨다
+            val answerIsTrue = quizViewModel.currentQuestionAnswer
+            val intent = CheatActivity.newIntent(this@MainActivity, answerIsTrue)
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val options =
+                    ActivityOptions.makeClipRevealAnimation(view, 0, 0, view.width, view.height)
+                    //자식 액티비티로부터 데이터를 돌려받기 위해 사용
+                    startActivityForResult(intent, REQUEST_CODE_CHEAT, options.toBundle())
+            }else{
+                startActivityForResult(intent, REQUEST_CODE_CHEAT)
+            }
+        }
+
+        updateQuestion()
+    }
 
     override fun onSaveInstanceState(savedInstanceState: Bundle) {
         super.onSaveInstanceState(savedInstanceState)
@@ -117,6 +126,10 @@ class MainActivity : AppCompatActivity() {
             quizViewModel.setCurrentQuestionCheated(
                 data?.getBooleanExtra(EXTRA_ANSWER_SHOWN, false)?: false
             )
+            if(quizViewModel.getCurrentQuestionCheated()){
+                quizViewModel.minusCheatCount()
+                cheatCountTextView.text = "남은 커닝 횟수: ${quizViewModel.cheatCount}"
+            }
         }
     }
 

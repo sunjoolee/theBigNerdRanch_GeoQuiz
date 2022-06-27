@@ -7,6 +7,7 @@ private const val TAG = "QuizViewModel"
 
 class QuizViewModel : ViewModel(){
     var currentIndex = 0
+    var cheatCount = 3
 
     private val questionBank = listOf(
         Question(R.string.question_australia, true),
@@ -35,5 +36,9 @@ class QuizViewModel : ViewModel(){
         currentIndex =
             if(currentIndex - 1 < 0) questionBank.size - 1
             else currentIndex - 1
+    }
+
+    fun minusCheatCount(){
+        cheatCount -= 1
     }
 }
