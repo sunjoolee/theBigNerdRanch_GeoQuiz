@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var previousButton: ImageButton
     private lateinit var questionTextView: TextView
     private lateinit var cheatButton:Button
+    private lateinit var versionTextView: TextView
 
     //ViewModel 인스턴스 사용하기
     private val quizViewModel : QuizViewModel by lazy {
@@ -55,6 +56,9 @@ class MainActivity : AppCompatActivity() {
             previousButton = findViewById(R.id.previous_button)
             questionTextView = findViewById(R.id.question_text_view)
             cheatButton = findViewById(R.id.cheat_button)
+
+            versionTextView = findViewById(R.id.version_text_view)
+            versionTextView.setText("API 레벨 ${Build.VERSION.SDK_INT}")
 
             trueButton.setOnClickListener {
                 checkAnswer(true)
